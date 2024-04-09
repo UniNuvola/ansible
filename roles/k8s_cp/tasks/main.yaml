@@ -1,0 +1,29 @@
+- name: Check cps
+  include_role:
+    name: k8s_cp_checks
+
+- name: Create the first control plane
+  run_once: true
+  delegate_to: "{{ mastercp }}"
+  block:
+    - name: Create the first control plane
+      include_role:
+        name: k8s_cp_create
+  when: cpmap['true'] is not defined or cpmap['true'] == 0
+
+- name: Check cps again
+  include_role:
+    name: k8s_cp_checks
+
+- name: Validate all the control planes
+  block:
+    - name: Validate the control planes
+      include_role:
+        name: k8s_cp_validate
+  when: cpmap['true'] is defined and cpmap['true'] > 0
+
+- name: Clone the new control planes
+  block:
+    - name: Clone the control planes
+      include_role:
+        name: k8s_cp_clone

@@ -1,0 +1,33 @@
+- name: Check if the node is a control plane
+  shell: |
+    ( test -f /etc/kubernetes/admin.conf && echo "true" ) ||  echo "false"
+  register: cp_existence
+
+- name: Get only the first host
+  run_once: true
+  delegate_to: localhost
+  set_fact:
+    onehost: "{{ hostvars | dict2items | map(attribute='key') | first }}"
+
+- name: Get a map of how many control planes are already configured
+  run_once: true
+  delegate_to: localhost
+  set_fact:
+    cpmap: "{{ hostvars[onehost]['cps'].split() | map('extract', hostvars, 'cp_existence') | map(attribute='stdout') | community.general.counter }}"
+
+# Get cert info
+- name: Get CA certificate hash
+  delegate_to: "{{ mastercp }}"
+  run_once: true
+  community.crypto.x509_certificate_info:
+    path: /etc/kubernetes/pki/ca.crt
+  register: __k8s_pki_ca
+  when: cpmap['true'] is defined and cpmap['true'] > 0
+
+# Use the info
+- name: register the discovery hash
+  delegate_to: "{{ mastercp }}"
+  run_once: true
+  set_fact:
+    discovery_hash: '{{ __k8s_pki_ca["public_key_fingerprints"]["sha256"] | replace(":","") }}'
+  when: cpmap['true'] is defined and cpmap['true'] > 0

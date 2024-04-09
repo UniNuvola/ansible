@@ -1,0 +1,14 @@
+# Get cert info
+- name: Get CA certificate hash
+  community.crypto.x509_certificate_info:
+    path: /etc/kubernetes/pki/ca.crt
+  register: __k8s_pki_ca
+  when: cp_existence.stdout == "true"
+
+# Use the info
+- name: if the discovery hash is not the same as the one in the inventory, fail
+  fail:
+    msg: "The discovery hash is not the same in different control planes"
+  when: 
+    - cp_existence.stdout == "true"
+    - __k8s_pki_ca["public_key_fingerprints"]["sha256"] | replace(":","") != discovery_hash

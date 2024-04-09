@@ -1,0 +1,29 @@
+- name: get the join command
+  run_once: true
+  delegate_to: "{{ mastercp }}"
+  shell: |
+    sudo kubeadm token create --print-join-command
+  register: __k8s_join_command
+
+- name: check if the kubelet file exists
+  shell: |
+    sudo test -f /etc/kubernetes/kubelet.conf && echo "true" || echo "false"
+  register: __kubelet_file_exists
+
+- name: check if the cluster is the right one by matching the server address in the kubelet.conf
+  shell: |
+    sudo grep -q "server: https://{{ k8s_api_vip }}:{{ k8s_api_port }}" /etc/kubernetes/kubelet.conf && echo "true" || echo "false"
+  register: __kubelet_server_match
+  when: __kubelet_file_exists.stdout == "true"
+
+- name: stop processing if the server address does not match
+  fail:
+    msg: "The server address in the kubelet.conf does not match the one in the inventory"
+  when: 
+    - __kubelet_file_exists.stdout == "true"
+    - __kubelet_server_match.stdout == "false"
+
+- name: execute the join command on empty nodes one at a time not concurrently
+  shell: "sudo {{ __k8s_join_command.stdout }}"
+  when: __kubelet_file_exists.stdout == "false"
+  throttle: 1

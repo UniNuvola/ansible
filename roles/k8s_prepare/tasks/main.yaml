@@ -1,0 +1,123 @@
+- name: Create containerd config file
+  file:
+    path: "/etc/modules-load.d/containerd.conf"
+    state: "touch"
+
+- name: Add conf for containerd
+  blockinfile:
+    path: "/etc/modules-load.d/containerd.conf"
+    block: |
+          overlay
+          br_netfilter
+
+- name: modprobe
+  shell: |
+          sudo modprobe overlay
+          sudo modprobe br_netfilter
+
+- name: Set system configurations for Kubernetes networking
+  file:
+    path: "/etc/sysctl.d/99-kubernetes-cri.conf"
+    state: "touch"
+
+- name: Add conf for containerd
+  blockinfile:
+    path: "/etc/sysctl.d/99-kubernetes-cri.conf"
+    block: |
+          net.bridge.bridge-nf-call-iptables = 1
+          net.ipv4.ip_forward = 1
+          net.bridge.bridge-nf-call-ip6tables = 1
+
+- name: Apply new settings
+  command: sudo sysctl --system
+
+- name: disable swap
+  shell: |
+    sudo swapoff -a
+    sudo sed -i 's/^\/swap\.img/#\/swap\.img/g' /etc/fstab
+
+- name: Install prerequisite
+  apt:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+    - gpg
+    - curl 
+    - gnupg2
+    - software-properties-common
+    - apt-transport-https
+    - ca-certificates
+
+- name: set gpg key
+  apt_key:
+    url: "https://download.docker.com/linux/ubuntu/gpg"
+    state: present
+
+- name: add repository
+  apt_repository:
+    repo: 'deb https://download.docker.com/linux/ubuntu jammy stable'
+    state: present
+
+- name: Install containerd
+  apt:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+    - containerd.io
+
+- name: patch containerd config
+  shell: |
+    sudo containerd config default > /etc/containerd/config.toml
+    sudo sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config.toml
+    sudo sed -i 's/pause:3\.6/pause:3\.9/g' /etc/containerd/config.toml
+    
+- name: Enable the services
+  systemd: enabled=yes name=containerd daemon_reload=yes state=started
+
+- name: set gpg key
+  get_url:
+    url:  https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key
+    dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+
+- name: add repository
+  apt_repository:
+    repo: 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /'
+    state: present
+
+- name: Check if kubeadm is installed
+  command: kubeadm version
+  register: kubeadm_version
+  ignore_errors: true
+
+- name: reboot if kubeadm is not installed
+  reboot:
+    msg: "Rebooting"
+    connect_timeout: 5
+    reboot_timeout: 300
+    pre_reboot_delay: 0
+    post_reboot_delay: 30
+  when: kubeadm_version is not defined or kubeadm_version.stdout == ""
+
+- name: Install k8s tools
+  apt:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+    - kubelet
+    - kubeadm
+    - kubectl
+
+- name: Hold kubeadm
+  ansible.builtin.dpkg_selections:
+    selection: hold
+    name: "{{ item }}"
+  loop:
+    - kubelet
+    - kubeadm
+    - kubectl
+
+
+

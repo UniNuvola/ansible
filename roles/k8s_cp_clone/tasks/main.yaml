@@ -1,0 +1,24 @@
+- name: Create a new certificate key
+  run_once: true
+  delegate_to: "{{ mastercp }}"
+  shell: |
+    kubeadm certs certificate-key
+  register: __k8s_cert_key
+
+- name: upload the new certificate key
+  run_once: true
+  delegate_to: "{{ mastercp }}"
+  shell: |
+    sudo kubeadm init phase upload-certs --upload-certs --certificate-key {{ __k8s_cert_key.stdout }}
+
+- name: get the join command
+  run_once: true
+  delegate_to: "{{ mastercp }}"
+  shell: |
+    sudo kubeadm token create --print-join-command --certificate-key {{ __k8s_cert_key.stdout }}
+  register: __k8s_join_command
+
+- name: execute the join command on empty control planes one at a time not concurrently
+  shell: "sudo {{ __k8s_join_command.stdout }}"
+  when: cp_existence.stdout == "false"
+  throttle: 1

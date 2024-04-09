@@ -1,0 +1,36 @@
+all:
+  vars:
+    ansible_user: ubuntu
+    mainkey:
+      - key: "{{ lookup('file', './keys/superkey2') }}"
+  children:
+    uninuvola:
+      hosts:
+        uninuvolaha0:
+          keepalived_nic: ens18
+          checked_roles:
+            - ha
+        uninuvolaha1:
+          keepalived_nic: ens18
+          checked_roles:
+            - ha
+        uninuvolacp:
+          checked_roles:
+            - cp
+        uninuvolacp1:
+          checked_roles:
+            - cp
+        uninuvola-node01:
+          checked_roles:
+            - node
+        uninuvola-node02:
+          checked_roles:
+            - node
+        uninuvola-node03:
+          checked_roles:
+            - node
+      vars:
+        authorized_key_list:
+          - name: root
+            state: present
+            authorized_keys: "{{ mainkey }} + {{ authorized_keys_of_the_group }}"

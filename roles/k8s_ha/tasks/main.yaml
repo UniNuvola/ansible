@@ -1,0 +1,45 @@
+- name: Install High Availability packages
+  apt:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - haproxy
+      - keepalived
+
+- name: Configure HAProxy
+  template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Configure Keepalived
+  template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Configure check script
+  template:
+    src: check_apiserver.sh.j2
+    dest: /etc/keepalived/check_apiserver.sh
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Start and enable HAProxy with systemd
+  service:
+    name: haproxy
+    state: started
+    enabled: yes
+
+- name: Start and enable Keepalived
+  service:
+    name: keepalived
+    state: started
+    enabled: yes
+
