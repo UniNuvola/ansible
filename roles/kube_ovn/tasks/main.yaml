@@ -1,0 +1,9 @@
+- name: Copy install.sh to the master node
+  copy:
+    src: "install.sh"
+    dest: /root/install.sh
+    mode: 0700
+
+- name: Wait a keyboard input to continue
+  pause:
+    prompt: "Run the install.sh script, eventually reboot, on the master node and press Enter to continue"

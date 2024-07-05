@@ -1,34 +1,44 @@
 
-- hosts: '{{ has }} {{ cps }}'
-  become: yes
-  become_user: root
-  tasks:
-  - include_role:
-      name: k8s_ha 
-    when: 
-      - checked_roles is defined
-      - '"ha" in checked_roles'
+# - hosts: '{{ has }} {{ cps }}'
+#   become: yes
+#   become_user: root
+#   tasks:
+#   - include_role:
+#       name: k8s_ha 
+#     when: 
+#       - checked_roles is defined
+#       - '"ha" in checked_roles'
 
-- hosts: '{{ cps }}'
-  become: yes
-  become_user: root
-  tasks:
-  - include_role:
-      name: k8s_prepare 
-  - include_role:
-      name: k8s_cp 
-    when: 
-      - checked_roles is defined
-      - '"cp" in checked_roles'
+# - hosts: '{{ cps }}'
+#   become: yes
+#   become_user: root
+#   tasks:
+#   - include_role:
+#       name: k8s_prepare 
+#   - include_role:
+#       name: k8s_cp 
+#     when: 
+#       - checked_roles is defined
+#       - '"cp" in checked_roles'
 
-- hosts: '{{ nodes }}'
+# - hosts: '{{ nodes }}'
+#   become: yes
+#   become_user: root
+#   tasks:
+#   - include_role:
+#       name: k8s_prepare 
+#   - include_role:
+#       name: k8s_node 
+#     when: 
+#       - checked_roles is defined
+#       - '"node" in checked_roles'
+
+- hosts: '{{ mastercp }}'
   become: yes
   become_user: root
   tasks:
   - include_role:
-      name: k8s_prepare 
+      name: kube_ovn
   - include_role:
-      name: k8s_node 
-    when: 
-      - checked_roles is defined
-      - '"node" in checked_roles'
+      name: rook
+  

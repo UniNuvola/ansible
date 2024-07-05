@@ -1,0 +1,14 @@
+- name: Copy the rook files to the master node
+  copy:
+    src: "{{ item }}"
+    dest: "/root/{{ item }}"
+  loop:
+    - cluster.yaml
+    - common.yaml
+    - operator.yaml
+    - crds.yaml
+    - toolbox.yaml
+
+- name: Wait a keyboard input to continue
+  pause:
+    prompt: "Run:\nkubectl apply -f /root/common.yaml -f /root/crds.yaml -f /root/operator.yaml\nwait\nkubectl apply -f /root/cluster.yaml\nwait\nkubectl apply -f /root/toolbox.yaml\nand press Enter to continue"
