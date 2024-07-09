@@ -12,3 +12,15 @@
 - name: Wait a keyboard input to continue
   pause:
     prompt: "Run:\nkubectl apply -f /root/common.yaml -f /root/crds.yaml -f /root/operator.yaml\nwait\nkubectl apply -f /root/cluster.yaml\nwait\nkubectl apply -f /root/toolbox.yaml\nand press Enter to continue"
+
+- name: Copy the rook storageclass file to the master node
+  copy:
+    src: "{{ item }}"
+    dest: "/root/{{ item }}"
+  loop:
+    - cephfs-init.yaml
+    - rbd-init.yaml
+
+- name: Wait a keyboard input to continue
+  pause:
+    prompt: "Run:\nkubectl apply -f /root/cephfs-init.yaml -f /root/rbd-init.yaml\nand press Enter to continue"
