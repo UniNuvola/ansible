@@ -35,6 +35,9 @@ all:
         uninuvola-gpu01:
           checked_roles:
             - node
+        uninuvola04:
+          checked_roles:
+            - node
       vars:
         authorized_key_list:
           - name: root
