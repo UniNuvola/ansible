@@ -23,16 +23,19 @@ all:
         uninuvolacp2:
           checked_roles:
             - cp
-        uninuvola-node01:
-          checked_roles:
-            - node
         uninuvola-node02:
           checked_roles:
             - node
-        uninuvola-node03:
+        uninuvola-gpu01:
           checked_roles:
             - node
-        uninuvola-gpu01:
+        uninuvola01:
+          checked_roles:
+            - node
+        uninuvola02:
+          checked_roles:
+            - node
+        uninuvola03:
           checked_roles:
             - node
         uninuvola04:

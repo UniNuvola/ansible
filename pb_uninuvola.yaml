@@ -3,23 +3,23 @@
   become: yes
   become_user: root
   tasks:
-  - include_role:
-      name: k8s_ha 
-    when: 
-      - checked_roles is defined
-      - '"ha" in checked_roles'
+#  - include_role:
+#      name: k8s_ha 
+#    when: 
+#      - checked_roles is defined
+#      - '"ha" in checked_roles'
 
 - hosts: '{{ cps }}'
   become: yes
   become_user: root
   tasks:
-  - include_role:
-      name: k8s_prepare 
-  - include_role:
-      name: k8s_cp 
-    when: 
-      - checked_roles is defined
-      - '"cp" in checked_roles'
+#  - include_role:
+#      name: k8s_prepare 
+#  - include_role:
+#      name: k8s_cp 
+#    when: 
+#      - checked_roles is defined
+#      - '"cp" in checked_roles'
 
 - hosts: '{{ nodes }}'
   become: yes
@@ -37,8 +37,8 @@
   become: yes
   become_user: root
   tasks:
-  - include_role:
-      name: kube_ovn
-  - include_role:
-      name: rook
+#  - include_role:
+#      name: kube_ovn
+#  - include_role:
+#      name: rook
   
